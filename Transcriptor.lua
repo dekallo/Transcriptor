@@ -1059,7 +1059,12 @@ do
 	end
 
 	function sh.UNIT_SPELLCAST_STOP(unit, castId, spellId, ...)
-		if not issecretvalue(spellId) and safeUnit(unit) then
+		local isSecret = issecretvalue(spellId)
+		if isSecret then
+			if bossUnits[unit] or unit == "target" then
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+			end
+		elseif safeUnit(unit) then
 			local maxHP = UnitHealthMax(unit)
 			local maxPower = UnitPowerMax(unit)
 			local hp = maxHP == 0 and maxHP or (UnitHealth(unit) / maxHP * 100)
@@ -1070,7 +1075,12 @@ do
 	sh.UNIT_SPELLCAST_CHANNEL_STOP = sh.UNIT_SPELLCAST_STOP
 
 	function sh.UNIT_SPELLCAST_INTERRUPTED(unit, castId, spellId, ...)
-		if not issecretvalue(spellId) and safeUnit(unit) then
+		local isSecret = issecretvalue(spellId)
+		if isSecret then
+			if bossUnits[unit] or unit == "target" then
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+			end
+		elseif safeUnit(unit) then
 			if TIMERS_SPECIAL_EVENTS.UNIT_SPELLCAST_INTERRUPTED[spellId] then
 				local name = TIMERS_SPECIAL_EVENTS.UNIT_SPELLCAST_INTERRUPTED[spellId][MobId(UnitGUID(unit))]
 				if name then
@@ -1088,8 +1098,12 @@ do
 
 	local prevCast = nil
 	function sh.UNIT_SPELLCAST_SUCCEEDED(unit, castId, spellId, ...)
-		if issecretvalue(spellId) then return end
-		if safeUnit(unit) then
+		local isSecret = issecretvalue(spellId)
+		if isSecret then
+			if bossUnits[unit] or unit == "target" then
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+			end
+		elseif safeUnit(unit) then
 			if castId ~= prevCast then
 				prevCast = castId
 				if not compareUnitSuccess then compareUnitSuccess = {} end
@@ -1129,7 +1143,12 @@ do
 		end
 	end
 	function sh.UNIT_SPELLCAST_START(unit, castId, spellId, ...)
-		if not issecretvalue(spellId) and safeUnit(unit) then
+		local isSecret = issecretvalue(spellId)
+		if isSecret then
+			if bossUnits[unit] or unit == "target" then
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+			end
+		elseif safeUnit(unit) then
 			local _, _, _, startTime, endTime = UnitCastingInfo(unit)
 			local time = ((endTime or 0) - (startTime or 0)) / 1000
 
@@ -1141,7 +1160,12 @@ do
 		end
 	end
 	function sh.UNIT_SPELLCAST_CHANNEL_START(unit, castId, spellId, ...)
-		if not issecretvalue(spellId) and safeUnit(unit) then
+		local isSecret = issecretvalue(spellId)
+		if isSecret then
+			if bossUnits[unit] or unit == "target" then
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+			end
+		elseif safeUnit(unit) then
 			local _, _, _, startTime, endTime = UnitChannelInfo(unit)
 			local time = ((endTime or 0) - (startTime or 0)) / 1000
 
@@ -1154,7 +1178,7 @@ do
 	end
 
 	function sh.UNIT_TARGET(unit)
-		if not issecretvalue(unit) and safeUnit(unit) then
+		if safeUnit(unit) then
 			if mapvalues then
 				return format("%s#%s#Target: %s#TargetOfTarget: %s", unit, tostringall(mapvalues(ReplaceSecrets, TSUnitName(unit), TSUnitName(unit.."target"), TSUnitName(unit.."targettarget"))))
 			else
