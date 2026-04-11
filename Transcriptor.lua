@@ -53,7 +53,7 @@ local debugprofilestop = debugprofilestop
 local C_Scenario, C_DeathInfo_GetSelfResurrectOptions, Enum = C_Scenario, C_DeathInfo.GetSelfResurrectOptions, Enum
 local IsEncounterInProgress, IsEncounterLimitingResurrections, IsEncounterSuppressingRelease = IsEncounterInProgress, IsEncounterLimitingResurrections, IsEncounterSuppressingRelease
 local UnitInRaid, UnitInParty, UnitIsFriend, UnitCastingInfo, UnitChannelInfo = UnitInRaid, UnitInParty, UnitIsFriend, UnitCastingInfo, UnitChannelInfo
-local UnitCanAttack, UnitExists, UnitIsVisible, UnitGUID, UnitClassification, ShowBossFrameWhenUninteractable = UnitCanAttack, UnitExists, UnitIsVisible, UnitGUID, UnitClassification, ShowBossFrameWhenUninteractable
+local UnitCanAttack, UnitExists, UnitIsVisible, UnitClassification, ShowBossFrameWhenUninteractable = UnitCanAttack, UnitExists, UnitIsVisible, UnitClassification, ShowBossFrameWhenUninteractable
 local UnitPower, UnitPowerMax, UnitPowerType, UnitHealth, UnitHealthMax = UnitPower, UnitPowerMax, UnitPowerType, UnitHealth, UnitHealthMax
 local UnitLevel, UnitCreatureType, UnitPercentHealthFromGUID, UnitTokenFromGUID = UnitLevel, UnitCreatureType, UnitPercentHealthFromGUID, UnitTokenFromGUID
 local GetInstanceInfo = GetInstanceInfo
@@ -76,6 +76,22 @@ do
 		print(format("|cFF33FF99Transcriptor|r: %s", tostring(msg)), tostringall(...))
 	end
 end
+
+local TSUnitGUID
+do
+	local UnitGUID = UnitGUID
+	function TSUnitGUID(unit)
+		local guid = UnitGUID(unit)
+		if issecretvalue(guid) then
+			return "<secret>"
+		elseif not guid then
+			return "<nil guid>"
+		else
+			return guid
+		end
+	end
+end
+local UnitGUID = UnitGUID
 
 local TSUnitName
 do
@@ -1062,7 +1078,8 @@ do
 		local isSecret = issecretvalue(spellId)
 		if isSecret then
 			if bossUnits[unit] or unit == "target" then
-				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+				local info = strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))
+				return format("%s#%s#{Target:%s} [[%s]]", TSUnitName(unit), TSUnitGUID(unit), TSUnitName(unit.."target"), info)
 			end
 		elseif safeUnit(unit) then
 			local maxHP = UnitHealthMax(unit)
@@ -1078,7 +1095,8 @@ do
 		local isSecret = issecretvalue(spellId)
 		if isSecret then
 			if bossUnits[unit] or unit == "target" then
-				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+				local info = strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), TSUnitGUID(unit), TSUnitName(unit.."target"), info))
 			end
 		elseif safeUnit(unit) then
 			if TIMERS_SPECIAL_EVENTS.UNIT_SPELLCAST_INTERRUPTED[spellId] then
@@ -1101,7 +1119,7 @@ do
 		local isSecret = issecretvalue(spellId)
 		if isSecret then
 			if bossUnits[unit] or unit == "target" then
-				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), TSUnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
 			end
 		elseif safeUnit(unit) then
 			if castId ~= prevCast then
@@ -1146,7 +1164,7 @@ do
 		local isSecret = issecretvalue(spellId)
 		if isSecret then
 			if bossUnits[unit] or unit == "target" then
-				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), TSUnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
 			end
 		elseif safeUnit(unit) then
 			local _, _, _, startTime, endTime = UnitCastingInfo(unit)
@@ -1163,7 +1181,7 @@ do
 		local isSecret = issecretvalue(spellId)
 		if isSecret then
 			if bossUnits[unit] or unit == "target" then
-				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), UnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
+				return format("%s#%s#{Target:%s} [[%s]]", mapvalues(ReplaceSecrets, TSUnitName(unit), TSUnitGUID(unit), TSUnitName(unit.."target"), strjoin(":", tostringall(mapvalues(ReplaceSecrets, unit, castId, spellId, ...)))))
 			end
 		elseif safeUnit(unit) then
 			local _, _, _, startTime, endTime = UnitChannelInfo(unit)
@@ -1209,9 +1227,9 @@ end
 function sh.UNIT_TARGETABLE_CHANGED(unit)
 	if not issecretvalue(unit) then
 		if mapvalues then
-			return format("-%s- [CanAttack:%s#Exists:%s#IsVisible:%s#Name:%s#GUID:%s#Classification:%s#Health:%s]", tostringall(unit, mapvalues(ReplaceSecrets, UnitCanAttack("player", unit), UnitExists(unit), UnitIsVisible(unit), TSUnitName(unit), UnitGUID(unit), UnitClassification(unit), (UnitHealth(unit)))))
+			return format("-%s- [CanAttack:%s#Exists:%s#IsVisible:%s#Name:%s#GUID:%s#Classification:%s#Health:%s]", tostringall(unit, mapvalues(ReplaceSecrets, UnitCanAttack("player", unit), UnitExists(unit), UnitIsVisible(unit), TSUnitName(unit), TSUnitGUID(unit), UnitClassification(unit), (UnitHealth(unit)))))
 		else
-			return format("-%s- [CanAttack:%s#Exists:%s#IsVisible:%s#Name:%s#GUID:%s#Classification:%s#Health:%s]", tostringall(unit, UnitCanAttack("player", unit), UnitExists(unit), UnitIsVisible(unit), TSUnitName(unit), UnitGUID(unit), UnitClassification(unit), (UnitHealth(unit))))
+			return format("-%s- [CanAttack:%s#Exists:%s#IsVisible:%s#Name:%s#GUID:%s#Classification:%s#Health:%s]", tostringall(unit, UnitCanAttack("player", unit), UnitExists(unit), UnitIsVisible(unit), TSUnitName(unit), TSUnitGUID(unit), UnitClassification(unit), (UnitHealth(unit))))
 		end
 	else
 		return "<secret>"
@@ -1860,7 +1878,7 @@ do
 					if playerSpecList[name] then
 						specId, role, position, talents = playerSpecList[name][1], playerSpecList[name][2], playerSpecList[name][3], playerSpecList[name][4]
 					end
-					local playerInfoLine = strjoin("#", tostringall(name, class, UnitGUID(unit), specId, role, position, talents))
+					local playerInfoLine = strjoin("#", tostringall(name, class, TSUnitGUID(unit), specId, role, position, talents))
 					currentLog.total[#currentLog.total+1] = format("<%.2f %s> [%s] %s", t, time, "PLAYER_INFO", playerInfoLine)
 				end
 			end
